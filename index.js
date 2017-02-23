@@ -49,8 +49,7 @@ function MqttGarageAccessory(log, config) {
     		rejectUnauthorized: false
 	};
 	this.caption		= config["caption"];
-	this.
-	StatusCurrent	= config["topics"].statusCurrent; // the target value sent to HomeKit
+	this.StatusCurrent	= config["topics"].statusCurrent; // the target value sent to HomeKit
 	this.topicStatusTarget	= config["topics"].statusTarget; // the actual value for door state
 	this.topicStatusObstruction	= config["topics"].statusObstructed;
 	
