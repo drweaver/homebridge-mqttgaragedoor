@@ -79,7 +79,7 @@ function MqttGarageAccessory(log, config) {
             that.service.getCharacteristic(Characteristic.CurrentDoorState).setValue(status, undefined, 'fromSetValue');
         }
         if (topic == that.topicStatusObstruction) { // actual value changed
-            var status = parseInt(message);
+            var status = message;
             that.CachedGarageObstructionDetectedState = status;
             that.service.getCharacteristic(Characteristic.ObstructionDetected).setValue(status, undefined, 'fromSetValue');
         }
