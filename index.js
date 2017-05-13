@@ -10,10 +10,16 @@
 //            "password": "PUT PASSWORD OF THE BROKER HERE"
 // 			  "caption": "PUT THE LABEL OF YOUR SWITCH HERE",
 // 			  "topics": {
-// 				"statusCurrent": 	"PUT THE MQTT TOPIC FOR THE GETTING THE STATUS OF YOUR SWITCH HERE",
-// 				"statusTarget": 	"PUT THE MQTT TOPIC FOR THE SETTING THE STATUS OF YOUR SWITCH HERE"
-//				"statusObstructed":	
-// 			  }
+// 				"status": 	"PUT THE MQTT TOPIC FOR THE GETTING THE STATUS OF YOUR SWITCH HERE",
+// 				"target": 	"PUT THE MQTT TOPIC FOR THE SETTING THE STATUS OF YOUR SWITCH HERE"
+// 			  },
+//            "statusOpenedPayload": "opened",
+//            "statusClosedPayload": "closed",
+//            "statusOpeningPayload": "opening",
+//            "statusClosingPayload": "closing",
+//            "statusStoppedPayload": "stopped",
+//            "targetOpenPayload": "open",
+//            "targetClosePayload": "close"
 //     }
 // ],
 //
@@ -49,9 +55,41 @@ function MqttGarageAccessory(log, config) {
         rejectUnauthorized: false
     };
     this.caption = config["caption"];
-    this.StatusCurrent = config["topics"].statusCurrent; // the target value sent to HomeKit
-    this.topicStatusTarget = config["topics"].statusTarget; // the actual value for door state
-    this.topicStatusObstruction = config["topics"].statusObstructed;
+    this.topicStatus = config["topics"].status; // the target value sent to HomeKit
+    this.topicTarget = config["topics"].target; // the actual value for door state
+
+// The value property of CurrentDoorState must be one of the following:
+// Characteristic.CurrentDoorState.OPEN = 0;
+// Characteristic.CurrentDoorState.CLOSED = 1;
+// Characteristic.CurrentDoorState.OPENING = 2;
+// Characteristic.CurrentDoorState.CLOSING = 3;
+// Characteristic.CurrentDoorState.STOPPED = 4;
+
+    this.translateStatus = function( status, callback ) {
+      switch (status) {
+          case config['statusOpenedPayload']: return callback(null, Characteristic.CurrentDoorState.OPEN);
+          case config['statusClosedPayload']: return callback(null, Characteristic.CurrentDoorState.CLOSED);
+          case config['statusOpeningPayload']: return callback(null, Characteristic.CurrentDoorState.OPENING);
+          case config['statusClosingPayload']: return callback(null, Characteristic.CurrentDoorState.CLOSING);
+          default: return callback("Invalid status: " + status);
+      }  
+    };
+    
+    this.translateTarget = function( target, callback ) {
+      switch (target) {
+          case config['targetOpenPayload']: return callback(null, Characteristic.CurrentDoorState.OPEN);
+          case config['targetClosePayload']: return callback(null, Characteristic.CurrentDoorState.CLOSED);
+          default: return callback("Invalid target: " + target);
+      }  
+    };
+    
+    this.characteristicToTarget = function( target, callback ) {
+        switch(target) {
+          case Characteristic.CurrentDoorState.OPEN: return callback(null, config['targetOpenPayload']);
+          case Characteristic.CurrentDoorState.CLOSED: return callback(null, config['targetClosePayload']);
+          default: return callback("Invalid target: " + target); 
+        }
+    };
 
     this.CachedGarageDoorState = null; // Characteristic.CurrentDoorState.CLOSED; // 1 = closed
     this.CachedGarageTargetDoorState = null; //Characteristic.CurrentDoorState.CLOSED; // 1 = closed
@@ -73,27 +111,29 @@ function MqttGarageAccessory(log, config) {
 
     this.client.on('message', function (topic, message) {
         that.log("Got MQTT! garage");
-        if (topic == that.topicStatusCurrent) { // actual value changed
-            var status = parseInt(message);
-            that.CachedGarageDoorState = status;
-            that.service.getCharacteristic(Characteristic.CurrentDoorState).setValue(status, undefined, 'fromSetValue');
+        if (topic == that.topicStatus) { // actual value changed
+            that.translateStatus(message, (err,status) => {
+                if( err ) {
+                    return that.log("Error with message on topic: " + topic + ": " + err);
+                }
+                that.CachedGarageDoorState = status;
+                that.service.getCharacteristic(Characteristic.CurrentDoorState).setValue(status, undefined, 'fromSetValue');
+            });
         }
-        if (topic == that.topicStatusObstruction) { // actual value changed
-            var status = message;
-            that.CachedGarageObstructionDetectedState = status;
-            that.service.getCharacteristic(Characteristic.ObstructionDetected).setValue(status, undefined, 'fromSetValue');
-        }
-        if (topic == that.topicStatusTarget) { // target value changed
-            var status = parseInt(message);
-            if (that.CachedGarageTargetDoorState != status) { // avoid loopback from own changes
-                that.CachedGarageTargetDoorState = status;
-                that.service.getCharacteristic(Characteristic.TargetDoorState).setValue(status, undefined, 'fromSetValue');
-            }
+        if (topic == that.topicTarget) { // target value changed
+            that.translateTarget(message, (err,status)=> {
+                if( err ) {
+                    return that.log("Error with message on topic: " + topic + ": " + err);
+                }
+                if (that.CachedGarageTargetDoorState != status) { // avoid loopback from own changes
+                    that.CachedGarageTargetDoorState = status;
+                    that.service.getCharacteristic(Characteristic.TargetDoorState).setValue(status, undefined, 'fromSetValue');
+                }
+            });
         }
     });
     this.client.subscribe(this.topicStatusCurrent);
-    this.client.subscribe(this.topicStatusTarget);
-    this.client.subscribe(this.topicStatusObstruction);
+    //this.client.subscribe(this.topicStatusTarget);
 }
 
 module.exports = function (homebridge) {
@@ -101,30 +141,33 @@ module.exports = function (homebridge) {
     Characteristic = homebridge.hap.Characteristic;
 
     homebridge.registerAccessory("homebridge-mqttgarage", "Mqttgarage", MqttGarageAccessory);
-}
+};
 
 MqttGarageAccessory.prototype.getDoorPositionState = function (callback) {
     this.log("getDoorPosition");
     callback(null, this.CachedGarageDoorState);
-}
+};
 
 MqttGarageAccessory.prototype.getDoorTargetPositionState = function (callback) {
     this.log("getDoorTargetPosition");
     callback(null, this.CachedGarageTargetDoorState);
-}
+};
 
 MqttGarageAccessory.prototype.setDoorTargetPosition = function (status, callback, context) {
     this.log("setDoorTargetPosition");
     this.CachedGarageTargetDoorState = status;
-    this.client.publish(this.topicStatusTarget, String(status)); // send MQTT packet for new state
+    this.characteristicToTarget(status, (err,target) => {
+        if( err ) return callback(err);
+        this.client.publish(this.topicTarget, String(target)); // send MQTT packet for new state
+    });
     callback();
-}
+};
 
 MqttGarageAccessory.prototype.getObstructionDetected = function (callback) {
     this.log("getObstructionDetected");
-    callback(null, this.CachedGarageObstructionDetectedState); //
-}
+    callback(null, false); //Not implemented
+};
 
 MqttGarageAccessory.prototype.getServices = function () {
     return [this.service];
-}
+};
