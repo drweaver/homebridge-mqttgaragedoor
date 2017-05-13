@@ -138,7 +138,7 @@ module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
 
-    homebridge.registerAccessory("homebridge-mqttgarage", "Mqttgarage", MqttGarageAccessory);
+    homebridge.registerAccessory("homebridge-mqttgarage", "mqttgarage", MqttGarageAccessory);
 };
 
 MqttGarageAccessory.prototype.getDoorPositionState = function (callback) {
