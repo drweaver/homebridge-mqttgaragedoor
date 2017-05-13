@@ -9,10 +9,8 @@
 //			  "username": "PUT USERNAME OF THE BROKER HERE",
 //            "password": "PUT PASSWORD OF THE BROKER HERE"
 // 			  "caption": "PUT THE LABEL OF YOUR SWITCH HERE",
-// 			  "topics": {
-// 				"status": 	"PUT THE MQTT TOPIC FOR THE GETTING THE STATUS OF YOUR SWITCH HERE",
-// 				"target": 	"PUT THE MQTT TOPIC FOR THE SETTING THE STATUS OF YOUR SWITCH HERE"
-// 			  },
+// 			  "topicStatus": 	"PUT THE MQTT TOPIC FOR THE GETTING THE STATUS OF YOUR SWITCH HERE",
+// 			  "topicTarget": 	"PUT THE MQTT TOPIC FOR THE SETTING THE STATUS OF YOUR SWITCH HERE"
 //            "statusOpenedPayload": "opened",
 //            "statusClosedPayload": "closed",
 //            "statusOpeningPayload": "opening",
@@ -55,8 +53,8 @@ function MqttGarageAccessory(log, config) {
         rejectUnauthorized: false
     };
     this.caption = config["caption"];
-    this.topicStatus = config["topics"].status; // the target value sent to HomeKit
-    this.topicTarget = config["topics"].target; // the actual value for door state
+    this.topicStatus = config["topicStatus"]; // the target value sent to HomeKit
+    this.topicTarget = config["topicTarget"]; // the actual value for door state
 
 // The value property of CurrentDoorState must be one of the following:
 // Characteristic.CurrentDoorState.OPEN = 0;
