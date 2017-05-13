@@ -132,8 +132,8 @@ function MqttGarageAccessory(log, config) {
             });
         }
     });
-    this.client.subscribe(this.topicStatusCurrent);
-    //this.client.subscribe(this.topicStatusTarget);
+    this.client.subscribe(this.topicStatus);
+    //this.client.subscribe(this.topicTarget);
 }
 
 module.exports = function (homebridge) {
