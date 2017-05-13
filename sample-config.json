@@ -9,16 +9,20 @@
 	"description": "This is an example configuration file for garage door",
 
 	"platforms": [],
-	"accessories": [{
-		"accessory": "Mqttgarage",
-		"name": "Garageöppnare",
-		"url": "mqtt://127.0.0.1",
-		"username": "",
-		"password": "",
-		"caption": "Garageport",
-		"topics": {
-			"statusCurrent": "garage/CurrentDoorState",
-			"statusTarget": "garage/TargetDoorState"
-		}
-	}]
+	"accessories": [
+     {
+        "accessory": "mqttgarage",
+        "name": "Garage Door",
+        "url": "mqtt://localhost",
+        "topicStatus":      "home/garage/door",
+        "topicTarget":      "home/garage/door/set",
+        "statusOpenedPayload": "opened",
+        "statusClosedPayload": "closed",
+        "statusOpeningPayload": "opening",
+        "statusClosingPayload": "closing",
+        "statusStoppedPayload": "stopped",
+        "targetOpenPayload": "open",
+        "targetClosePayload": "close"
+     }
+	]
 }
