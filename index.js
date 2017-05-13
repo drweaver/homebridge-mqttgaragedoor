@@ -109,7 +109,7 @@ function MqttGarageAccessory(log, config) {
     });
 
     this.client.on('message', function (topic, message) {
-        that.log("MQTT Recieved on topic: " + topic + " message: ");
+        that.log("MQTT Recieved on topic: " + topic + " message: " + message);
         if (topic == that.topicStatus) { // actual value changed
             that.translateStatus(message, (err,status) => {
                 if( err ) {
@@ -132,7 +132,7 @@ function MqttGarageAccessory(log, config) {
         }
     });
     this.client.subscribe(this.topicStatus);
-    //this.client.subscribe(this.topicTarget);
+    this.client.subscribe(this.topicTarget);
 }
 
 module.exports = function (homebridge) {
