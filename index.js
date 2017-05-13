@@ -72,13 +72,11 @@ function MqttGarageAccessory(log, config) {
 
     var that = this;
     this.translateStatus = function( status, callback ) {
-      switch (status) {
-          case that.statusOpenedPayload: return callback(null, Characteristic.CurrentDoorState.OPEN);
-          case that.statusClosedPayload: return callback(null, Characteristic.CurrentDoorState.CLOSED);
-          case that.statusOpeningPayload: return callback(null, Characteristic.CurrentDoorState.OPENING);
-          case that.statusClosingPayload: return callback(null, Characteristic.CurrentDoorState.CLOSING);
-          default: return callback("Invalid status: " + status);
-      }  
+      if ( status == that.statusOpenedPayload)   return callback(null, Characteristic.CurrentDoorState.OPEN);
+      if ( status == that.statusClosedPayload)   return callback(null, Characteristic.CurrentDoorState.CLOSED);
+      if ( status ==  that.statusOpeningPayload) return callback(null, Characteristic.CurrentDoorState.OPENING);
+      if ( status ==  that.statusClosingPayload) return callback(null, Characteristic.CurrentDoorState.CLOSING);
+      return callback("Invalid status: " + status);
     };
     
     this.translateTarget = function( target, callback ) {
