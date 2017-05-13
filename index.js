@@ -93,7 +93,7 @@ function MqttGarageAccessory(log, config) {
 
     this.CachedGarageDoorState = null; // Characteristic.CurrentDoorState.CLOSED; // 1 = closed
     this.CachedGarageTargetDoorState = null; //Characteristic.CurrentDoorState.CLOSED; // 1 = closed
-    this.CachedGarageObstructionDetectedState = null;
+    this.CachedGarageObstructionDetectedState = false;
 
     this.service = new Service.GarageDoorOpener(this.name);
 
@@ -117,6 +117,10 @@ function MqttGarageAccessory(log, config) {
                 }
                 that.CachedGarageDoorState = status;
                 that.service.getCharacteristic(Characteristic.CurrentDoorState).setValue(status, undefined, 'fromSetValue');
+                if( that.CachedGarageTargetDoorState == null ) { // init target state
+                    that.CachedGarageTargetDoorState = status;
+                    that.service.getCharacteristic(Characteristic.TargetDoorState).setValue(status, undefined, 'fromSetValue');
+                }
             });
         }
         if (topic == that.topicTarget) { // target value changed
