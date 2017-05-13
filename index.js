@@ -3,7 +3,7 @@
 // Remember to add accessory to config.json. Example:
 // "accessories": [
 //     {
-//            "accessory": "mqttswitch",
+//            "accessory": "mqttgarage",
 //            "name": "PUT THE NAME OF YOUR SWITCH HERE",
 //            "url": "PUT URL OF THE BROKER HERE",
 //			  "username": "PUT USERNAME OF THE BROKER HERE",
@@ -55,6 +55,13 @@ function MqttGarageAccessory(log, config) {
     this.caption = config["caption"];
     this.topicStatus = config["topicStatus"]; // the target value sent to HomeKit
     this.topicTarget = config["topicTarget"]; // the actual value for door state
+    
+    this.statusOpenedPayload = config['statusOpenedPayload'];
+    this.statusClosedPayload = config['statusClosedPayload'];
+    this.statusOpeningPayload = config['statusOpeningPayload'];
+    this.statusClosingPayload = config['statusClosingPayload'];
+    this.targetOpenPayload = config['targetOpenPayload'];
+    this.targetClosePayload = config['targetClosePayload'];
 
 // The value property of CurrentDoorState must be one of the following:
 // Characteristic.CurrentDoorState.OPEN = 0;
@@ -63,28 +70,29 @@ function MqttGarageAccessory(log, config) {
 // Characteristic.CurrentDoorState.CLOSING = 3;
 // Characteristic.CurrentDoorState.STOPPED = 4;
 
+    var that = this;
     this.translateStatus = function( status, callback ) {
       switch (status) {
-          case config['statusOpenedPayload']: return callback(null, Characteristic.CurrentDoorState.OPEN);
-          case config['statusClosedPayload']: return callback(null, Characteristic.CurrentDoorState.CLOSED);
-          case config['statusOpeningPayload']: return callback(null, Characteristic.CurrentDoorState.OPENING);
-          case config['statusClosingPayload']: return callback(null, Characteristic.CurrentDoorState.CLOSING);
+          case that.statusOpenedPayload: return callback(null, Characteristic.CurrentDoorState.OPEN);
+          case that.statusClosedPayload: return callback(null, Characteristic.CurrentDoorState.CLOSED);
+          case that.statusOpeningPayload: return callback(null, Characteristic.CurrentDoorState.OPENING);
+          case that.statusClosingPayload: return callback(null, Characteristic.CurrentDoorState.CLOSING);
           default: return callback("Invalid status: " + status);
       }  
     };
     
     this.translateTarget = function( target, callback ) {
       switch (target) {
-          case config['targetOpenPayload']: return callback(null, Characteristic.CurrentDoorState.OPEN);
-          case config['targetClosePayload']: return callback(null, Characteristic.CurrentDoorState.CLOSED);
+          case that.targetOpenPayload: return callback(null, Characteristic.CurrentDoorState.OPEN);
+          case that.targetClosePayload: return callback(null, Characteristic.CurrentDoorState.CLOSED);
           default: return callback("Invalid target: " + target);
       }  
     };
     
     this.characteristicToTarget = function( target, callback ) {
         switch(target) {
-          case Characteristic.CurrentDoorState.OPEN: return callback(null, config['targetOpenPayload']);
-          case Characteristic.CurrentDoorState.CLOSED: return callback(null, config['targetClosePayload']);
+          case Characteristic.CurrentDoorState.OPEN: return callback(null, that.targetOpenPayload);
+          case Characteristic.CurrentDoorState.CLOSED: return callback(null, that.targetClosePayload);
           default: return callback("Invalid target: " + target); 
         }
     };
@@ -102,7 +110,6 @@ function MqttGarageAccessory(log, config) {
 
     // connect to MQTT broker
     this.client = mqtt.connect(this.url, this.options);
-    var that = this;
     this.client.on('error', function () {
         that.log('Error event on MQTT');
     });
