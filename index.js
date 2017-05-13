@@ -80,19 +80,15 @@ function MqttGarageAccessory(log, config) {
     };
     
     this.translateTarget = function( target, callback ) {
-      switch (target) {
-          case that.targetOpenPayload: return callback(null, Characteristic.CurrentDoorState.OPEN);
-          case that.targetClosePayload: return callback(null, Characteristic.CurrentDoorState.CLOSED);
-          default: return callback("Invalid target: " + target);
-      }  
+      if ( target == that.targetOpenPayload)  return callback(null, Characteristic.CurrentDoorState.OPEN);
+      if ( target == that.targetClosePayload) return callback(null, Characteristic.CurrentDoorState.CLOSED);
+      return callback("Invalid target: " + target);
     };
     
     this.characteristicToTarget = function( target, callback ) {
-        switch(target) {
-          case Characteristic.CurrentDoorState.OPEN: return callback(null, that.targetOpenPayload);
-          case Characteristic.CurrentDoorState.CLOSED: return callback(null, that.targetClosePayload);
-          default: return callback("Invalid target: " + target); 
-        }
+        if( target == Characteristic.CurrentDoorState.OPEN) return callback(null, that.targetOpenPayload);
+        if( target == Characteristic.CurrentDoorState.CLOSED) return callback(null, that.targetClosePayload);
+        return callback("Invalid target: " + target); 
     };
 
     this.CachedGarageDoorState = null; // Characteristic.CurrentDoorState.CLOSED; // 1 = closed
@@ -113,7 +109,7 @@ function MqttGarageAccessory(log, config) {
     });
 
     this.client.on('message', function (topic, message) {
-        that.log("Got MQTT! garage");
+        that.log("MQTT Recieved on topic: " + topic + " message: ");
         if (topic == that.topicStatus) { // actual value changed
             that.translateStatus(message, (err,status) => {
                 if( err ) {
